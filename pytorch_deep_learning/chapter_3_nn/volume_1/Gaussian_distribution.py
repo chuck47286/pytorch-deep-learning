@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from d2l import torch as d2l
 
-from chapter_3.volume_1.Timer import Timer
+from chapter_3_nn.volume_1.Timer import Timer
 
 n = 10000
 a = torch.ones([n])

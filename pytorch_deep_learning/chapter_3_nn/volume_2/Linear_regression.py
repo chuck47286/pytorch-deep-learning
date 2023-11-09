@@ -5,7 +5,7 @@ import random
 import torch
 from d2l import torch as d2l
 
-from chapter_3.volume_1.Timer import Timer
+from chapter_3_nn.volume_1.Timer import Timer
 
 # 生成数据集
 def synthetic_data(w, b, num_examples):  #@save

@@ -1,5 +1,5 @@
 venv/
 .idea
-chapter_3/data/
-chapter_4/data/
-chapter_5/volume_5/file/
+chapter_3_nn/data/
+chapter_4_mlp/data/
+chapter_5_deep-learning/volume_5/file/
