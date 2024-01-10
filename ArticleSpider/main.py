@@ -14,4 +14,5 @@ D:\python_workspace\ArticleSpider
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-execute(["scrapy", "crawl", "jobbole"])
+if __name__ == '__main__':
+    execute(["scrapy", "crawl", "jobbole"])
