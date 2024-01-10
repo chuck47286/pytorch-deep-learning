@@ -1,4 +1,7 @@
+from urllib import parse
+
 import scrapy
+from scrapy import Request
 import undetected_chromedriver
 
 
@@ -59,16 +62,22 @@ class JobboleSpider(scrapy.Spider):
 
 
     def parse(self, response):
-        # '//*[@id="entry_761661"]/div[2]/h2/a' # Xpath相对路径
-        # "/html/body/div[2]/div[2]/div[4]/div[1]/div[2]/h2/a" # Xpath全路径
-        # Xpath的实现方式
-        # 1. 通过元素id直接获取（不推荐，由于无法直接知道id的属性）
-        # url = response.xpath('//*[@id="entry_761661"]/div[2]/h2/a/@href').extract_first("")
-        # 2. 通过不变的属性的相对路径获取
-        # url = response.xpath('//div[@id="news_list"]/div[1]/div[2]/h2/a/@href').extract_first("")
-        # url = response.xpath('//div[@id="news_list"]//h2[@class="news_entry"]/a/@href').extract_first("")
+        """
+        1. 获取新闻列表中的新闻url 并交给scrapy进行下载后调用相应的解析方法
+        2. 获取下一页的url并交给scrapy进行下载，下载完成后交给parse继续跟进
+        :param response:
+        :return:
+        """
+        post_nodes = response.css('#news_list .news_block')
+        for post_node in post_nodes:
+            image_url = post_node.css('.entry_summary a img::attr(href)').extract_first('')
+            post_url = post_node.css('h2 a::attr(href)').extract_first('')
+            yield Request(url=parse.urljoin(response.url, post_url), meta={"front_image_url": image_url}, callback=self.parse_detail)
 
-        # url = response.xpath('//div[@id="news_list"]//h2[@class="news_entry"]/a/@href').extract()
-        # 3. css选择器写法
-        url = response.css('div#news_list h2 a::attr(href)').extract()
+        # 提取下一页并交给scrapy进行下载
+        # next_url = response.css('dev.pager a::last-child::text').extract_first('')
+        next_url = response.xpath('//a[contains(text(), "Next >")]/@href').extract_first('')
+        yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
+
+    def parse_detail(self, response):
         pass
