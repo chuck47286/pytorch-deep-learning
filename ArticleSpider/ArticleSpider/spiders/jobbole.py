@@ -23,12 +23,15 @@ class JobboleSpider(scrapy.Spider):
 
     def start_requests(self):
         # 入口可以模拟登录拿到cookie, selenium控制浏览器会被一些网站识别出来
+        # import undetected_chromedriver as uc
+        # browser = uc.Chrome(headless=True, use_subprocess=False)
+        # browser.get('https://account.cnblogs.com/signin')
         import undetected_chromedriver as uc
-        browser = uc.Chrome(headless=True, use_subprocess=False)
-        browser.get('https://account.cnblogs.com/signin')
+        browser = uc.Chrome(use_subprocess=True)
+        browser.get("https://account.cnblogs.com/signin")
         # 自动化输入，自动化识别滑动验证码并拖动整个自动化过程
         input("回车继续：")
-        cookies = browser.get_cookies()
+        cookies = browser.get_cookies() # 要先获取到cookies 才可以关模拟器
         cookie_dict = {}
         for cookie in cookies:
             cookie_dict[cookie['name']] = cookie['value']
@@ -85,10 +88,18 @@ class JobboleSpider(scrapy.Spider):
     def parse_detail(self, response):
         match_re = re.match(".*?(\d+)", response.url)
         if match_re:
-            title = response.css("#news_title a::text").extract_first("")
-            create_date = response.css("#news_info .time::text").extract_first("")
-            create_date = response.css("#news_content").extract()[0]
-            tag_list = response.css(".news_tags a::text").extract()
+            # title = response.css("#news_title a::text").extract_first("")
+            title = response.xpath("//*[@id='news_title']//a/text()").extract_first("")
+            # create_date = response.css("#news_info .time::text").extract_first("")
+            create_date = response.xpath("//*[@id='news_info']//*[@class='time']/text()").extract_first("")
+            # match_re = re.match(".*?(\d+.*)", create_date)
+            # if match_re:
+            #     create_date = match_re.group(1)
+
+            # content = response.css("#news_content").extract()[0]
+            content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0] # 直接从网页上获取XPATH
+            # tag_list = response.css(".news_tags a::text").extract()
+            tag_list = response.xpath("//*[@class='news_tags']//a/text()").extract()
             tags = ",".join(tag_list)
 
             # Ajax中获取数据
@@ -96,7 +107,7 @@ class JobboleSpider(scrapy.Spider):
             # html = requests.get(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)))
             # j_data = json.loads(html.text)
 
-            yield requests.get(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)), callback=self.parse_num)
+            yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)), callback=self.parse_num)
 
 
             # praise_num = j_data["DiggCount"]
@@ -109,3 +120,4 @@ class JobboleSpider(scrapy.Spider):
         praise_num = j_data["DiggCount"]
         fav_nums = j_data["TotalView"]
         comment_nums = j_data["CommentCount"]
+        pass
