@@ -7,6 +7,9 @@ from scrapy import Request
 import requests
 import undetected_chromedriver
 
+from ArticleSpider.utils import common
+from ArticleSpider.items import JobBoleArticleItem
+
 
 class JobboleSpider(scrapy.Spider):
     name = "jobbole"
@@ -88,6 +91,7 @@ class JobboleSpider(scrapy.Spider):
     def parse_detail(self, response):
         match_re = re.match(".*?(\d+)", response.url)
         if match_re:
+            article_item = JobBoleArticleItem()
             # title = response.css("#news_title a::text").extract_first("")
             title = response.xpath("//*[@id='news_title']//a/text()").extract_first("")
             # create_date = response.css("#news_info .time::text").extract_first("")
@@ -107,7 +111,15 @@ class JobboleSpider(scrapy.Spider):
             # html = requests.get(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)))
             # j_data = json.loads(html.text)
 
-            yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)), callback=self.parse_num)
+            article_item['title'] = title
+            article_item['create_date'] = create_date
+            article_item['content'] = content
+            article_item['tags'] = tags
+            article_item['url'] = response.url
+            article_item['front_image_url'] = response.meta.get("front_image_url", "")
+
+            yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)),
+                         meta = {"article_item": article_item}, callback=self.parse_num)
 
 
             # praise_num = j_data["DiggCount"]
@@ -116,8 +128,17 @@ class JobboleSpider(scrapy.Spider):
 
     def parse_num(self, response):
         j_data = json.loads(response.text)
+        article_item = response.meta.get("article_item","")
 
         praise_num = j_data["DiggCount"]
         fav_nums = j_data["TotalView"]
         comment_nums = j_data["CommentCount"]
+
+        article_item['praise_nums'] = praise_num
+        article_item['fav_nums'] = fav_nums
+        article_item['comment_nums'] = comment_nums
+
+        article_item['url_object_id'] = common.get_md5(article_item['url'])
+
+        yield article_item
         pass
