@@ -11,6 +11,12 @@ from ArticleSpider.utils import common
 from ArticleSpider.items import JobBoleArticleItem
 
 
+def process_image_url(url):
+    if url.startswith('//'):
+        return 'https:' + url  # 或者 'http:' 根据需要选择
+    return url
+
+
 class JobboleSpider(scrapy.Spider):
     name = "jobbole"
     allowed_domains = ["news.cnblogs.com"]
@@ -34,7 +40,7 @@ class JobboleSpider(scrapy.Spider):
         browser.get("https://account.cnblogs.com/signin")
         # 自动化输入，自动化识别滑动验证码并拖动整个自动化过程
         input("回车继续：")
-        cookies = browser.get_cookies() # 要先获取到cookies 才可以关模拟器
+        cookies = browser.get_cookies()  # 要先获取到cookies 才可以关模拟器
         cookie_dict = {}
         for cookie in cookies:
             cookie_dict[cookie['name']] = cookie['value']
@@ -42,10 +48,9 @@ class JobboleSpider(scrapy.Spider):
         for url in self.start_urls:
             # 将cookie交给scrapy
             headers = {
-                'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             yield scrapy.Request(url, cookies=cookie_dict, headers=headers, dont_filter=True)
-
 
     # 模拟不使用手动获取cookie，会出现什么异常
     # 2024-01-09 15:52:25 [scrapy.downloadermiddlewares.redirect] DEBUG: Redirecting (302) to <GET https://account.cnblogs.com:443/signin?ReturnUrl=https%3A%2F%2Fnews.cnblogs.com%2Fn%2F761849%2F> from <GET https://news.cnblogs.com/n/761849/>
@@ -69,7 +74,6 @@ class JobboleSpider(scrapy.Spider):
     #         }
     #         yield scrapy.Request("https://news.cnblogs.com/n/761849/", headers=headers, dont_filter=True)
 
-
     def parse(self, response):
         """
         1. 获取新闻列表中的新闻url 并交给scrapy进行下载后调用相应的解析方法
@@ -79,7 +83,7 @@ class JobboleSpider(scrapy.Spider):
         """
         post_nodes = response.css('#news_list .news_block')[:1]
         for post_node in post_nodes:
-            image_url = post_node.css('.entry_summary a img::attr(src)').extract_first('')
+            image_url = process_image_url(post_node.css('.entry_summary a img::attr(src)').extract_first(''))
             post_url = post_node.css('h2 a::attr(href)').extract_first('')
             yield Request(url=parse.urljoin(response.url, post_url), meta={"front_image_url": image_url}, callback=self.parse_detail)
 
@@ -101,7 +105,7 @@ class JobboleSpider(scrapy.Spider):
             #     create_date = match_re.group(1)
 
             # content = response.css("#news_content").extract()[0]
-            content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0] # 直接从网页上获取XPATH
+            content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0]  # 直接从网页上获取XPATH
             # tag_list = response.css(".news_tags a::text").extract()
             tag_list = response.xpath("//*[@class='news_tags']//a/text()").extract()
             tags = ",".join(tag_list)
@@ -119,8 +123,7 @@ class JobboleSpider(scrapy.Spider):
             article_item['front_image_url'] = [response.meta.get("front_image_url", "")]
 
             yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)),
-                         meta = {"article_item": article_item}, callback=self.parse_num)
-
+                          meta={"article_item": article_item}, callback=self.parse_num)
 
             # praise_num = j_data["DiggCount"]
             # fav_nums = j_data["TotalView"]
@@ -128,7 +131,7 @@ class JobboleSpider(scrapy.Spider):
 
     def parse_num(self, response):
         j_data = json.loads(response.text)
-        article_item = response.meta.get("article_item","")
+        article_item = response.meta.get("article_item", "")
 
         praise_num = j_data["DiggCount"]
         fav_nums = j_data["TotalView"]

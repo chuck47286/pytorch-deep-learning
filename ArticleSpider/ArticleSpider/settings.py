@@ -68,7 +68,7 @@ ROBOTSTXT_OBEY = False
 # 启用图像管道 'scrapy.pipelines.images.ImagesPipeline': 1
 ITEM_PIPELINES = {
    'ArticleSpider.pipelines.ArticlespiderPipeline': 300,
-   'scrapy.pipelines.images.ImagesPipeline': 1
+   'ArticleSpider.pipelines.ArticleImagesPipeline': 1
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
