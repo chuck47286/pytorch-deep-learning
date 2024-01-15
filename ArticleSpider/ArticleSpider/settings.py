@@ -67,8 +67,10 @@ ROBOTSTXT_OBEY = False
 # 启用ArticleSpider.pipelines.ArticlespiderPipeline通道用于处理爬虫获取到的数据 300 表示优先级，越小优先级越高
 # 启用图像管道 'scrapy.pipelines.images.ImagesPipeline': 1
 ITEM_PIPELINES = {
+   'ArticleSpider.pipelines.ArticleImagesPipeline': 1,
+   'ArticleSpider.pipelines.JsonWithEncodingPipeline': 2,
+   'ArticleSpider.pipelines.JsonExporterPipeline': 3,
    'ArticleSpider.pipelines.ArticlespiderPipeline': 300,
-   'ArticleSpider.pipelines.ArticleImagesPipeline': 1
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
