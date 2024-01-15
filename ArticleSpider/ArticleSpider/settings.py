@@ -6,6 +6,8 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import sys
+import os
 
 BOT_NAME = "ArticleSpider"
 
@@ -62,8 +64,11 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+# 启用ArticleSpider.pipelines.ArticlespiderPipeline通道用于处理爬虫获取到的数据 300 表示优先级，越小优先级越高
+# 启用图像管道 'scrapy.pipelines.images.ImagesPipeline': 1
 ITEM_PIPELINES = {
-   "ArticleSpider.pipelines.ArticlespiderPipeline": 300,
+   'ArticleSpider.pipelines.ArticlespiderPipeline': 300,
+   'scrapy.pipelines.images.ImagesPipeline': 1
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -91,3 +96,10 @@ ITEM_PIPELINES = {
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
+
+
+# 目标存储设置配置为用于存储下载的图像的有效值
+# 图像管道设置 和items设置中的key保持一致
+IMAGES_URLS_FIELD = 'front_image_url'
+# 图像管道下载路径
+IMAGES_STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')

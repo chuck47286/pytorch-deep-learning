@@ -79,7 +79,7 @@ class JobboleSpider(scrapy.Spider):
         """
         post_nodes = response.css('#news_list .news_block')[:1]
         for post_node in post_nodes:
-            image_url = post_node.css('.entry_summary a img::attr(href)').extract_first('')
+            image_url = post_node.css('.entry_summary a img::attr(src)').extract_first('')
             post_url = post_node.css('h2 a::attr(href)').extract_first('')
             yield Request(url=parse.urljoin(response.url, post_url), meta={"front_image_url": image_url}, callback=self.parse_detail)
 
@@ -116,7 +116,7 @@ class JobboleSpider(scrapy.Spider):
             article_item['content'] = content
             article_item['tags'] = tags
             article_item['url'] = response.url
-            article_item['front_image_url'] = response.meta.get("front_image_url", "")
+            article_item['front_image_url'] = [response.meta.get("front_image_url", "")]
 
             yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)),
                          meta = {"article_item": article_item}, callback=self.parse_num)
