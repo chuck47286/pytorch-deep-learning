@@ -3,6 +3,8 @@ import re
 import json
 
 import scrapy
+# from scrapy.loader import ItemLoader
+from ArticleSpider.items import ArticleItemLoader
 from scrapy import Request
 import requests
 import undetected_chromedriver
@@ -95,35 +97,46 @@ class JobboleSpider(scrapy.Spider):
     def parse_detail(self, response):
         match_re = re.match(".*?(\d+)", response.url)
         if match_re:
-            article_item = JobBoleArticleItem()
-            # title = response.css("#news_title a::text").extract_first("")
-            title = response.xpath("//*[@id='news_title']//a/text()").extract_first("")
-            # create_date = response.css("#news_info .time::text").extract_first("")
-            create_date = response.xpath("//*[@id='news_info']//*[@class='time']/text()").extract_first("")
-            # match_re = re.match(".*?(\d+.*)", create_date)
-            # if match_re:
-            #     create_date = match_re.group(1)
-
-            content = response.css("#news_content").extract()[0]
-            # content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0]  # 直接从网页上获取XPATH
-            # tag_list = response.css(".news_tags a::text").extract()
-            tag_list = response.xpath("//*[@class='news_tags']//a/text()").extract()
-            tags = ",".join(tag_list)
-
-            # Ajax中获取数据
             post_id = match_re.group(1)
-            # html = requests.get(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)))
-            # j_data = json.loads(html.text)
+        #     article_item = JobBoleArticleItem()
+        #     # title = response.css("#news_title a::text").extract_first("")
+        #     title = response.xpath("//*[@id='news_title']//a/text()").extract_first("")
+        #     # create_date = response.css("#news_info .time::text").extract_first("")
+        #     create_date = response.xpath("//*[@id='news_info']//*[@class='time']/text()").extract_first("")
+        #     # match_re = re.match(".*?(\d+.*)", create_date)
+        #     # if match_re:
+        #     #     create_date = match_re.group(1)
+        #
+        #     content = response.css("#news_content").extract()[0]
+        #     # content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0]  # 直接从网页上获取XPATH
+        #     # tag_list = response.css(".news_tags a::text").extract()
+        #     tag_list = response.xpath("//*[@class='news_tags']//a/text()").extract()
+        #     tags = ",".join(tag_list)
+        #
+        #     # Ajax中获取数据
+        #     # html = requests.get(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)))
+        #     # j_data = json.loads(html.text)
+        #
+        #     article_item['title'] = title
+        #     article_item['create_date'] = create_date
+        #     article_item['content'] = content
+        #     article_item['tags'] = tags
+        #     article_item['url'] = response.url
+        #     if response.meta.get("front_image_url", ""):
+        #         article_item['front_image_url'] = [response.meta.get("front_image_url", "")]
+        #     else:
+        #         article_item['front_image_url'] = []
 
-            article_item['title'] = title
-            article_item['create_date'] = create_date
-            article_item['content'] = content
-            article_item['tags'] = tags
-            article_item['url'] = response.url
-            if response.meta.get("front_image_url", ""):
-                article_item['front_image_url'] = [response.meta.get("front_image_url", "")]
-            else:
-                article_item['front_image_url'] = []
+            # scrapy框架中 itemLoader重构之前代码
+            item_loader = ArticleItemLoader(item=JobBoleArticleItem(), response=response)
+            item_loader.add_css("title", "#news_title a::text")
+            item_loader.add_css("content", "#news_content")
+            item_loader.add_css("tags", ".news_tags a::text")
+            item_loader.add_css("create_date", "#news_info .time::text")
+            item_loader.add_value("url", response.url)
+            item_loader.add_value("front_image_url", response.meta.get("front_image_url", ""))
+            # 实现方式1，局部使用ItemLoader构建数据
+            article_item = item_loader.load_item()
 
             yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)),
                           meta={"article_item": article_item}, callback=self.parse_num)
