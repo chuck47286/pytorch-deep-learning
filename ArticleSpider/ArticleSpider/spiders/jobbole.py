@@ -136,10 +136,10 @@ class JobboleSpider(scrapy.Spider):
             item_loader.add_value("url", response.url)
             item_loader.add_value("front_image_url", response.meta.get("front_image_url", ""))
             # 实现方式1，局部使用ItemLoader构建数据
-            article_item = item_loader.load_item()
+            # article_item = item_loader.load_item()
 
             yield Request(url=parse.urljoin(response.url, "/NewsAjax/GetAjaxNewsInfo?contentId={}".format(post_id)),
-                          meta={"article_item": article_item}, callback=self.parse_num)
+                          meta={"article_item": item_loader, "url": response.url}, callback=self.parse_num)
 
             # praise_num = j_data["DiggCount"]
             # fav_nums = j_data["TotalView"]
@@ -147,17 +147,24 @@ class JobboleSpider(scrapy.Spider):
 
     def parse_num(self, response):
         j_data = json.loads(response.text)
-        article_item = response.meta.get("article_item", "")
+        # article_item = response.meta.get("article_item", "")
+        # 方式2 全局使用ItemLoader提取数据
+        item_loader = response.meta.get("article_item", "")
 
         praise_num = j_data["DiggCount"]
         fav_nums = j_data["TotalView"]
         comment_nums = j_data["CommentCount"]
 
-        article_item['praise_nums'] = praise_num
-        article_item['fav_nums'] = fav_nums
-        article_item['comment_nums'] = comment_nums
+        # article_item['praise_nums'] = praise_num
+        # article_item['fav_nums'] = fav_nums
+        # article_item['comment_nums'] = comment_nums
+        # article_item['url_object_id'] = common.get_md5(article_item['url'])
 
-        article_item['url_object_id'] = common.get_md5(article_item['url'])
+        item_loader.add_value("praise_nums", praise_num)
+        item_loader.add_value("fav_nums", fav_nums)
+        item_loader.add_value("comment_nums", comment_nums)
+        item_loader.add_value("url_object_id", common.get_md5(response.meta.get("url", "")))
+        article_item = item_loader.load_item()
 
         yield article_item
         pass
