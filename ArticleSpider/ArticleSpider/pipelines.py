@@ -9,11 +9,94 @@ import json
 from itemadapter import ItemAdapter
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.exporters import JsonItemExporter
+from twisted.enterprise import adbapi
+import MySQLdb
 
 
 class ArticlespiderPipeline:
     def process_item(self, item, spider):
         return item
+
+
+# 写入Mysql数据库（同步实现，不推荐）
+class MysqlPipeLine(object):
+    # 打开文件
+    def __init__(self):
+        self.conn = MySQLdb.connect("120.26.12.74", "root", "123456", "article_spider",
+                                    charset='utf8', use_unicode=True)
+        self.cursor = self.conn.cursor()
+
+    def process_item(self, item, spider):
+        insert_sql = """
+            INSERT INTO `article_spider`.`jobbole_article` (`title`, `url`, `url_object_id`, `front_image_path`, 
+            `front_image_url`, `praise_nums`, `comment_nums`, `fav_nums`, `tags`, `content`, `create_date`) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE praise_nums=VALUES(praise_nums);
+        """
+        params = list()
+        params.append(item.get('title', ''))
+        params.append(item.get('url', ''))
+        params.append(item.get('url_object_id', ''))
+        params.append(item.get('front_image_path', ''))
+        params.append(item.get('front_image_url', ''))
+        params.append(item.get('praise_nums', 0))
+        params.append(item.get('comment_nums', 0))
+        params.append(item.get('fav_nums', 0))
+        params.append(item.get('tags', ''))
+        params.append(item.get('content', ''))
+        params.append(item.get('create_date', '1970-07-01'))
+        self.cursor.execute(insert_sql, tuple(params))  # 执行SQL
+        self.conn.commit()  # 入库
+        return item
+
+
+# 异步写入Mysql数据库
+class MysqlTwistedPipeline(object):
+    def __init__(self, dbpool):
+        self.dbpool = dbpool
+
+    @classmethod
+    def from_settings(cls, settings):
+        from MySQLdb.cursors import DictCursor
+        dbparams = dict(
+            host=settings['MYSQL_HOST'],
+            db=settings['MYSQL_DBNAME'],
+            user=settings['MYSQL_USER'],
+            passwd=settings['MYSQL_PASSWORD'],
+            charset='utf8',
+            cursorclass=DictCursor,
+            use_unicode=True,
+        )
+        dbpool = adbapi.ConnectionPool("MySQLdb", **dbparams)
+        return cls(dbpool)
+
+    def process_item(self, item, spider):
+        query = self.dbpool.runInteraction(self.do_insert, item)
+        query.addErrback(self.handle_error, item, spider)
+
+    def handle_error(self, failure, item, spider):
+        print(failure)
+
+    def do_insert(self, cursor, item):
+        insert_sql = """
+                    INSERT INTO `article_spider`.`jobbole_article` (`title`, `url`, `url_object_id`, `front_image_path`, 
+                    `front_image_url`, `praise_nums`, `comment_nums`, `fav_nums`, `tags`, `content`, `create_date`) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE praise_nums=VALUES(praise_nums)
+                """
+        params = list()
+        params.append(item.get('title', ''))
+        params.append(item.get('url', ''))
+        params.append(item.get('url_object_id', ''))
+        params.append(item.get('front_image_path', ''))
+        params.append(item.get("front_image_url", ''))
+        params.append(item.get('praise_nums', 0))
+        params.append(item.get('comment_nums', 0))
+        params.append(item.get('fav_nums', 0))
+        params.append(item.get('tags', ''))
+        params.append(item.get('content', ''))
+        params.append(item.get('create_date', '1970-07-01'))
+
+        cursor.execute(insert_sql, tuple(params))  # 执行SQL
+
 
 # 自定义的导出json文件
 class JsonWithEncodingPipeline(object):

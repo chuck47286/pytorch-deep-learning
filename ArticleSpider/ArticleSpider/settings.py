@@ -66,10 +66,12 @@ ROBOTSTXT_OBEY = False
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 # 启用ArticleSpider.pipelines.ArticlespiderPipeline通道用于处理爬虫获取到的数据 300 表示优先级，越小优先级越高
 # 启用图像管道 'scrapy.pipelines.images.ImagesPipeline': 1
+# 数据库通道 MysqlTwistedPipeline（推荐） MysqlPipeLine（不推荐）
 ITEM_PIPELINES = {
    'ArticleSpider.pipelines.ArticleImagesPipeline': 1,
    'ArticleSpider.pipelines.JsonWithEncodingPipeline': 2,
    'ArticleSpider.pipelines.JsonExporterPipeline': 3,
+   'ArticleSpider.pipelines.MysqlTwistedPipeline': 4,
    'ArticleSpider.pipelines.ArticlespiderPipeline': 300,
 }
 
@@ -105,3 +107,9 @@ FEED_EXPORT_ENCODING = "utf-8"
 IMAGES_URLS_FIELD = 'front_image_url'
 # 图像管道下载路径
 IMAGES_STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')
+
+# 数据库MYSQL配置
+MYSQL_HOST = "120.26.12.74"
+MYSQL_DBNAME = "article_spider"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "123456"

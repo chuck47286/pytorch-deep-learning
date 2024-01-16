@@ -104,8 +104,8 @@ class JobboleSpider(scrapy.Spider):
             # if match_re:
             #     create_date = match_re.group(1)
 
-            # content = response.css("#news_content").extract()[0]
-            content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0]  # 直接从网页上获取XPATH
+            content = response.css("#news_content").extract()[0]
+            # content = response.xpath('//*[@id="news_body"]//p/text()').extract()[0]  # 直接从网页上获取XPATH
             # tag_list = response.css(".news_tags a::text").extract()
             tag_list = response.xpath("//*[@class='news_tags']//a/text()").extract()
             tags = ",".join(tag_list)
