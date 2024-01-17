@@ -91,6 +91,7 @@ class JobboleSpider(scrapy.Spider):
 
         # 提取下一页并交给scrapy进行下载
         # next_url = response.css('dev.pager a::last-child::text').extract_first('')
+        # 批量爬取，打开下方代码
         # next_url = response.xpath('//a[contains(text(), "Next >")]/@href').extract_first('')
         # yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
 

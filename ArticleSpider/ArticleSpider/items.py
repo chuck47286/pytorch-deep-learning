@@ -6,7 +6,7 @@
 import scrapy
 import re
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import MapCompose, TakeFirst, Identity, Join
+from itemloaders.processors import MapCompose, TakeFirst, Identity, Join
 
 
 class ArticlespiderItem(scrapy.Item):
