@@ -83,7 +83,7 @@ class JobboleSpider(scrapy.Spider):
         :param response:
         :return:
         """
-        post_nodes = response.css('#news_list .news_block')[:1]
+        post_nodes = response.css('#news_list .news_block')[:15] # 调整当前页最大拉取个数，如果不取列表，就是全拉取
         for post_node in post_nodes:
             image_url = process_image_url(post_node.css('.entry_summary a img::attr(src)').extract_first(''))
             post_url = post_node.css('h2 a::attr(href)').extract_first('')
@@ -92,8 +92,8 @@ class JobboleSpider(scrapy.Spider):
         # 提取下一页并交给scrapy进行下载
         # next_url = response.css('dev.pager a::last-child::text').extract_first('')
         # 批量爬取，打开下方代码
-        # next_url = response.xpath('//a[contains(text(), "Next >")]/@href').extract_first('')
-        # yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
+        next_url = response.xpath('//a[contains(text(), "Next >")]/@href').extract_first('')
+        yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
 
     def parse_detail(self, response):
         match_re = re.match(".*?(\d+)", response.url)
