@@ -113,3 +113,7 @@ MYSQL_HOST = "120.26.12.74"
 MYSQL_DBNAME = "article_spider"
 MYSQL_USER = "root"
 MYSQL_PASSWORD = "123456"
+
+# 知乎账户以及密码
+USER = "472861399@qq.com"
+PASSWORD = "ch01041127yu"
