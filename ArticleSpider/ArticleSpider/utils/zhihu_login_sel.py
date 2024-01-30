@@ -228,6 +228,35 @@ class Login(object):
         self.password = password
         self.retry = retry  # 重试次数
 
+    def download_captcha_images(self, num_images=100):
+        """
+        为机器学习获取数据，以便后续的标注
+        :param num_images:
+        :return:
+        """
+        # 轮训100次用来刷新以及下载背景图片
+        refresh_button = self.wait.until(
+            Ec.element_to_be_clickable((By.CSS_SELECTOR, '.yidun_top .yidun_refresh'))
+        )
+        for _ in range(num_images):
+            # 1. 点击刷新按钮
+            refresh_button.click()
+            time.sleep(3)
+
+            # 2. 定位背景图片元素
+            bg_img = self.wait.until(
+                Ec.presence_of_element_located((By.CSS_SELECTOR, '.yidun_bgimg .yidun_bg-img'))
+            )
+            # 提取图片URL
+            img_url = bg_img.get_attribute('src')
+            # 下载图片（示例代码，需要根据实际情况调整）
+            response = requests.get(img_url)
+            with open(f"../folder/test/test{_}.jpg", "wb") as file:
+                file.write(response.content)
+        print(f"download BackGroundImg 100 done~")
+
+    # ... 下载图片的代码 ...
+
     def login(self):
         # 请求网址
         self.browser.get(self.url)
@@ -254,6 +283,9 @@ class Login(object):
         time.sleep(3)
         submit.click()
         time.sleep(3)
+
+        # 调用刷新并下载验证码图片的方法
+        self.download_captcha_images(2)
 
         k = 1
         # while True:

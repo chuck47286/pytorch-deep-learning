@@ -1,4 +1,5 @@
 *.pyc
 .idea
 ArticleSpider/images/*
+ArticleSpider/folder/
 *.json
