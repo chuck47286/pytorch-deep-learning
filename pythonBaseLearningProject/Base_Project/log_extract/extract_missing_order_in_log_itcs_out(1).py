@@ -1,5 +1,5 @@
 """
-专门用于提取ITCS-OUT日志中，丢单的msgId
+专门用于提取ITCS日志中，丢单的msgId
 """
 import re
 import os
@@ -7,56 +7,58 @@ import time
 from datetime import datetime
 
 
-def extract_order_from_log(log_line):
+def extract_enqueue_info(log_line):
     """
-    Extracts the order value from a log line if it contains the specified PBU.
+    Extracts enqueue information form a log line.
+    Returns module_pbu. msgId, and originalMsgId.
     """
-    order_match = re.search(r'execRpt (\w+)', log_line)
-    pbu_match = re.search(r'pbu (\w+)', log_line)
-    if order_match and pbu_match:
-        return order_match.group(1), pbu_match.group(1)
-    return None
+    match = re.search(r'module_pbu=(\w+).*msgId=(\w+).*originalMsgId=(\d+)', log_line)
+    if match:
+        return match.groups()
+    return None, None, None
 
 
-def extract_msgId_from_log(log_line):
+def extract_dequeue_info(log_line):
     """
-    Extracts the msgId value from a log line if it contains the specified PBU.
+    Extracts dequeue information form a log line.
+    Returns module_pbu and msgId.
     """
-    msgId_match = re.search(r'msgId=(\S+)', log_line)
-    if msgId_match:
-        return msgId_match.group(1)
-    return None
+    match = re.search(r'module_pbu=(\w+).*msgId=(\w+)', log_line)
+    if match:
+        return match.groups()
+    return None, None, None
 
 
 def process_logs_from_file(file_path):
     """
     Processes log lines from a file, extracting and comparing order and msgId values based on the specified PBU.
     """
-    orders = set()
-    msgIds = set()
-    order_pbu_dict = {}
-    msgId_dict = {}
+    enqueue_orders = {}  # key: module_pbu, value: set of (msgId, originalMsgId)
+    dequeue_orders = {}  # key: module_pbu, value: set of msgId
+    still_in_queue = {}  # key: module_pbu, value: list of originalMsgId
 
     # with open(file_path, 'r', encoding='gbk') as file:
     with open(file_path, 'r', encoding='utf-8') as file:
         for log in file:
-            if 'RECV type ' in log:
-                order, pbu = extract_order_from_log(log)
-                if order and pbu:
-                    orders.add(order)
-                    order_pbu_dict[order] = pbu
-            elif 'ITCS-OUT send ServiceContext start!' in log:
-                msgId = extract_msgId_from_log(log)
-                if msgId:
-                    # Extracting the order part of the msgId
-                    msgId_part = msgId[-len(order):]
-                    msgIds.add(msgId_part)
-                    msgId_dict[msgId_part] = msgId
+            if 'OrderQueuePreProperties [createBizTypeKey] done, pbuKey is created!' in log:
+                module_pbu, msgId, originalMsgId = extract_enqueue_info(log)
+                if module_pbu:
+                    enqueue_orders.setdefault(module_pbu, {}).update({msgId: originalMsgId})
+            elif 'ITCS send start!' in log:
+                module_pbu, msgId = extract_dequeue_info(log)
+                if module_pbu:
+                    dequeue_orders.setdefault(module_pbu, set()).add(msgId)
 
-    # Finding orders that are not part of any msgId
-    missing_orders = orders - msgIds
+    # filtering orders still in the queue
+    for module_pbu, msgId_to_original in enqueue_orders.items():
+        still_in_queue[module_pbu] = [original for msgId, original in msgId_to_original.items()
+                                                      if msgId not in dequeue_orders.get(module_pbu, set())]
+    # count enqueued_orders 中所有的元素的总数
+    total_enqueued = sum(len(msgId_to_original) for msgId_to_original in enqueue_orders.values())
+    # count dequeued_orders 中所有的元素的总数
+    total_dequeued = sum(len(msgIds) for msgIds in dequeue_orders.values())
 
-    return missing_orders, msgIds, orders, msgId_dict, order_pbu_dict
+    return total_enqueued, total_dequeued, still_in_queue
 
 
 def print_sorted_set(s, desc="Set", numeric_sort=False, traversal=False):
@@ -137,18 +139,14 @@ def process_and_print_logs(file_path):
     print(f'Current Timestamp:{current_time}')
 
     # 执行日志处理函数
-    missing_orders, msgIds, orders, order_msgId_dict, order_pbu_dict = process_logs_from_file(
+    total_enqueued, total_dequeued, still_in_queue = process_logs_from_file(
         os.path.join(dir_path, file_name))
 
     # 打印结果
-    print_sorted_set(missing_orders, desc="missing_orders", numeric_sort=True)
-    # print_sorted_set(msgIds, desc="msgIds", numeric_sort=True)
-    print_sorted_set(orders, desc="orders", numeric_sort=True)
-    # print_sorted_map(order_msgId_dict, desc="msgIds")
-    # print_sorted_map(order_pbu_dict, desc="order_pbu_dict")
-    for_missing_orders = find_pbu_for_missing_orders(missing_orders, order_pbu_dict)
-    for key in sorted(for_missing_orders.keys()):
-        print(f"Key: {key}, value: {for_missing_orders[key]}")
+    print(f"missing_orders (Size:{total_enqueued - total_dequeued})")
+    print(f"orders (Size:{total_enqueued})")
+    for key in sorted(still_in_queue.keys()):
+        print(f"Key: {key}, value: {still_in_queue[key]}")
     print(f'-----------------------')
 
 
@@ -157,11 +155,11 @@ if __name__ == "__main__":
     interval = 5  # 300s == 5min
 
     # 日志文件路径
-    dir_path = r'./log_folder/' # 测试日志路径
-    file_name = "test_3.txt"  # 测试日志文件名
+    # dir_path = r'C:\Users\yucheng\Downloads' # 测试日志路径
+    # file_name = "stdout - 2024-01-17T111257.805"  # 测试日志文件名
 
-    # dir_path = r'C:\Users\yucheng\Downloads'  # 本地日志路径
-    # file_name = "itcs_out.txt"  # 替换为你的日志文件路径
+    dir_path = r'./log_folder/' # 测试日志路径
+    file_name = "stdout (50)"  # 测试日志文件名
     # print(os.path.join(dir_path, file_name))
     file_path = os.path.join(dir_path, file_name)
 
