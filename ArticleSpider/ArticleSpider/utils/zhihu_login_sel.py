@@ -284,8 +284,8 @@ class Login(object):
         submit.click()
         time.sleep(3)
 
-        # 调用刷新并下载验证码图片的方法
-        self.download_captcha_images(2)
+        # # 调用刷新并下载验证码图片的方法 （如果只是模拟登录，不需要开启）
+        # self.download_captcha_images(2)
 
         k = 1
         # while True:
