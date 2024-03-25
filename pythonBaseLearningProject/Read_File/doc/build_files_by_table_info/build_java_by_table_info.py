@@ -79,6 +79,6 @@ for item in json_data['AE']:
 java_code += "}"
 
 # 将生成的Java代码写入到一个文本文件中
-file_path = './TradeOrder.java'
+file_path = './StepTestOrder.java'
 with open(file_path, 'w') as file:
     file.write(java_code)
