@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<stepStruct>
+    <field name="PartitionNo" tag="10197" type="N4" jtype="Integer" necessary="Y" from="SetID"/>
+    <field name="ReportIndex" tag="10179" type="N16" jtype="Long" necessary="Y" from="ReportIndex"/>
+    <field name="ApplID" tag="1180" type="C6" jtype="String" necessary="Y" from="BizID"/>
+    <field name="TradeReportID" tag="571" type="C10" jtype="String" necessary="N" from="TradeReportID"/>
+    <field name="TradeID" tag="1003" type="C16" jtype="String" necessary="N" from="TradeID"/>
+    <field name="SecurityID" tag="48" type="C12" jtype="String" necessary="N" from="SecurityID"/>
+    <field name="TrdType" tag="828" type="C3" jtype="String" necessary="N" from="TrdType"/>
+    <field name="TradeReportType" tag="856" type="C1" jtype="String" necessary="Y" from="TradeReportType"/>
+    <field name="TradeReportTransType" tag="487" type="C1" jtype="String" necessary="Y" from="TradeReportTransType"/>
+    <field name="TrdAckStatus" tag="8912" type="C1" jtype="String" necessary="Y" from="TrdAckStatus"/>
+    <field name="TrdRptStatus" tag="939" type="C1" jtype="String" necessary="Y" from="TrdRptStatus"/>
+    <field name="OrigTradeID" tag="1126" type="C10" jtype="String" necessary="N" from="OrigTradeID"/>
+    <field name="OwnerType" tag="522" type="N3" jtype="Integer" necessary="Y" from="OwnerType"/>
+    <field name="TradeReportRefID" tag="572" type="C10" jtype="String" necessary="N" from="TradeReportRefID"/>
+    <field name="Side" tag="54" type="C1" jtype="String" necessary="Y" from="Side"/>
+    <field name="Price1" tag="44" type="price" jtype="BigDecimal" necessary="N" from="Price1"/>
+    <field name="Price2" tag="640" type="price" jtype="BigDecimal" necessary="N" from="Price2"/>
+    <field name="ExpirationDays" tag="8911" type="N4" jtype="Integer" necessary="N" from="ExpirationDays"/>
+    <field name="SettlDate" tag="64" type="C8" jtype="String" necessary="N" from="SettlDate"/>
+    <field name="MaturityDate" tag="541" type="C8" jtype="String" necessary="N" from="MaturityDate"/>
+    <field name="SettlDate2" tag="193" type="C8" jtype="String" necessary="N" from="SettlDate2"/>
+    <field name="UAInterestAccrualDays" tag="8847" type="N3" jtype="Integer" necessary="N"
+           from="UAInterestAccrualDays"/>
+    <field name="TransactTime" tag="60" type="ntime" jtype="String" necessary="N" from="TransactTime"/>
+    <field name="TotalValueTraded" tag="8504" type="totalValueTradedAE" jtype="BigDecimal" necessary="N"
+           from="TotalValueTraded"/>
+    <field name="TotalAccruedInterestAmt" tag="540" type="totalAccruedInterestAmt" jtype="BigDecimal" necessary="N"
+           from="TotalAccruedInterestAmt"/>
+    <field name="TotalSettlCurrAmt" tag="10330" type="totalSettlCurrAmt" jtype="BigDecimal" necessary="N"
+           from="TotalSettlCurrAmt"/>
+    <field name="NoDates" tag="580" type="N3" jtype="Integer" necessary="N" from="NoDates"/>
+    <field name="ShareProperty" tag="10331" type="C1" jtype="String" necessary="N" from="ShareProperty"/>
+    <field name="RestrictedMonth" tag="10332" type="C4" jtype="String" necessary="N" from="RestrictedMonth"/>
+    <field name="OrderRestrictions" tag="529" type="C1" jtype="String" necessary="N" from="OrderRestrictions"/>
+    <field name="SecurityExchange" tag="207" type="C1" jtype="String" necessary="N" from="SecurityExchange"/>
+    <field name="SettlType" tag="63" type="C1" jtype="String" necessary="N" from="SettlType"/>
+    <field name="SettlPeriod" tag="10216" type="C1" jtype="String" necessary="Y" from="SettlPeriod"/>
+    <field name="SettlementType" tag="8531" type="C1" jtype="String" necessary="N" from="SettlementType"/>
+
+    <repeat name="NoUnderlyings" tag="711" type="N2" jtype="Integer" necessary="N"
+            from="com.sse.iitp.protocol.converter.bo.StepUndInstrmtGrp"  collectionList="Y">
+        <stepStruct>
+            <field name="SecurityID" tag="48" type="C12" jtype="String" necessary="Y" from="SecurityID"/>
+            <field name="OrderQty" tag="38" type="quantity" jtype="BigDecimal" necessary="Y" from="OrderQty"/>
+            <field name="ShareProperty" tag="10331" type="C1" jtype="String" necessary="Y" from="ShareProperty"/>
+            <field name="RestrictedMonth" tag="10332" type="C4" jtype="String" necessary="Y"
+                   from="RestrictedMonth"/>
+            <field name="ContractMultiplier" tag="231" type="contractMultiplier" jtype="BigDecimal" necessary="N"
+                   from="ContractMultiplier"/>
+            <field name="LastQty" tag="32" type="lastQty" jtype="BigDecimal" necessary="N" from="LastQty"/>
+            <field name="GrossTradeAmt" tag="381" type="grossTradeAmt" jtype="BigDecimal" necessary="N"
+                   from="GrossTradAmt"/>
+            <field name="AccruedInterestAmt" tag="159" type="accruedInterestAmt" jtype="BigDecimal" necessary="N"
+                   from="AccruedInterestAmt"/>
+            <field name="SettlCurrAmt" tag="119" type="settlCurrAmt" jtype="BigDecimal" necessary="N"
+                   from="SettlCurrAmt"/>
+        </stepStruct>
+    </repeat>
+    <field name="LastPx" tag="31" type="price" jtype="BigDecimal" necessary="N" from="LastPx"/>
+    <field name="LastQty" tag="32" type="quantity" jtype="BigDecimal" necessary="N" from="LastQty"/>
+    <field name="GrossTradeAmt" tag="381" type="grossTradeAmtAE4" jtype="BigDecimal" necessary="N" from="GrossTradeAmt"/>
+    <field name="ExecID" tag="17" type="C16" jtype="String" necessary="N" from="TrdCnfmID"/>
+    <field name="OrderQty2" tag="192" type="orderQty2" jtype="BigDecimal" necessary="N" from="OrderQty2"/>
+    <field name="TrdSubType" tag="829" type="C1" jtype="String" necessary="N" from="TrdSubType"/>
+    <field name="OrigTradeDate" tag="1125" type="C8" jtype="String" necessary="N" from="OrigTradeDate"/>
+    <field name="ExecRefID" tag="19" type="C16" jtype="String" necessary="N" from="ExecRefID"/>
+    <field name="OrderEntryTime" tag="8500" type="ntime" jtype="String" necessary="N" from="OrderEntryTime"/>
+    <repeat name="NoPartyIDs" tag="453" type="N2" jtype="Integer" necessary="N" constValue="9">
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C8" jtype="String" necessary="Y" from="PBU"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="Y" constValue="17"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C12" jtype="String" necessary="N" from="TradeParticipantsCode"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="12"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C10" jtype="String" necessary="N" from="TraderBntAccount"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="101"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C8" jtype="String" necessary="N" from="BizPBU"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="1"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C8" jtype="String" necessary="N" from="BranchID"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="4001"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C10" jtype="String" necessary="N" from="Account"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="5"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C120" jtype="String" necessary="N" from="AccountName"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="38"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C12" jtype="String" necessary="N" from="CounterTraderOrgCode"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="37"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C10" jtype="String" necessary="N" from="CounterTraderBntAccount1"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="102"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C10" jtype="String" necessary="N" from="CounterTraderBntAccount2"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="N" constValue="57"/>
+        </stepStruct>
+        <stepStruct>
+            <field name="PartyID" tag="448" type="C120" jtype="String" necessary="Y" from="PledgeeName"/>
+            <field name="PartyRole" tag="452" type="N4" jtype="Integer" necessary="Y" constValue="105"/>
+        </stepStruct>
+    </repeat>
+    <field name="ConfirmID" tag="664" type="C12" jtype="String" necessary="N" from="ConfirmID"/>
+    <field name="Memo" tag="10198" type="C900" jtype="String" necessary="N" from="Memo"/>
+    <field name="Text" tag="58" type="C900" jtype="String" necessary="N" from="Text"/>
+</stepStruct>

@@ -2,3 +2,5 @@
 venv/
 Base_Project/log_extract/log_folder/
 Read_File/external_library/
+Read_File/output_file_folder/
+Read_File/doc/build_files_by_table_info/template_file/
