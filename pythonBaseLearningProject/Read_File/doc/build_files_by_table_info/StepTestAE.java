@@ -50,42 +50,42 @@ public class StepTradeCaptureReport extends StepOrderBase {
     private String Side;
 
     @ApiModelProperty(value = "申报价格（元）或回购利率（%）
-合并申报时代表买入价格|Object", required = false)
-    private Object Price1;
+合并申报时代表买入价格|BigDecimal", required = false)
+    private BigDecimal Price1;
 
     @ApiModelProperty(value = "申报价格2
-合并申报时代表卖出价格（元）|Object", required = false)
-    private Object Price2;
+合并申报时代表卖出价格（元）|BigDecimal", required = false)
+    private BigDecimal Price2;
 
     @ApiModelProperty(value = "期限（天），可填[1,365]|Integer", required = false)
     private Integer ExpirationDays;
 
-    @ApiModelProperty(value = "首次结算日|Object", required = false)
-    private Object SettlDate;
+    @ApiModelProperty(value = "首次结算日|String", required = false)
+    private String SettlDate;
 
-    @ApiModelProperty(value = "到期日|Object", required = false)
-    private Object MaturityDate;
+    @ApiModelProperty(value = "到期日|String", required = false)
+    private String MaturityDate;
 
-    @ApiModelProperty(value = "到期结算日|Object", required = false)
-    private Object SettlDate2;
+    @ApiModelProperty(value = "到期结算日|String", required = false)
+    private String SettlDate2;
 
     @ApiModelProperty(value = "实际占款天数（天），可填[1,365]|Integer", required = false)
     private Integer UAInterestAccrualDays;
 
-    @ApiModelProperty(value = "业务发生时间|Object", required = true)
-    private Object TransactTime;
+    @ApiModelProperty(value = "业务发生时间|String", required = true)
+    private String TransactTime;
 
     @ApiModelProperty(value = "总成交金额，四舍五入
-预留，暂不启用|Object", required = false)
-    private Object TotalValueTraded;
+预留，暂不启用|BigDecimal", required = false)
+    private BigDecimal TotalValueTraded;
 
     @ApiModelProperty(value = "总回购利息，四舍五入
-预留，暂不启用|Object", required = false)
-    private Object TotalAccruedInterestAmt;
+预留，暂不启用|BigDecimal", required = false)
+    private BigDecimal TotalAccruedInterestAmt;
 
     @ApiModelProperty(value = "总到期结算金额，四舍五入
-预留，暂不启用|Object", required = false)
-    private Object TotalSettlCurrAmt;
+预留，暂不启用|BigDecimal", required = false)
+    private BigDecimal TotalSettlCurrAmt;
 
     @ApiModelProperty(value = "违约宽限期（天），[0,365]。|Integer", required = false)
     private Integer NoDates;
@@ -118,8 +118,8 @@ N = 否|String", required = false)
     @ApiModelProperty(value = "证券代码|String", required = false)
     private String SecurityID;
 
-    @ApiModelProperty(value = "证券数量|Object", required = false)
-    private Object OrderQty;
+    @ApiModelProperty(value = "证券数量|BigDecimal", required = false)
+    private BigDecimal OrderQty;
 
     @ApiModelProperty(value = "份额类型
 0 = 限售
@@ -133,20 +133,20 @@ N = 否|String", required = false)
     @ApiModelProperty(value = "折算比例（%）|Integer", required = false)
     private Integer ContractMultiplier;
 
-    @ApiModelProperty(value = "质押券面值总额|Object", required = false)
-    private Object CashOrderQty;
+    @ApiModelProperty(value = "质押券面值总额|BigDecimal", required = false)
+    private BigDecimal CashOrderQty;
 
-    @ApiModelProperty(value = "成交金额|Object", required = false)
-    private Object GrossTradeAmt;
+    @ApiModelProperty(value = "成交金额|BigDecimal", required = false)
+    private BigDecimal GrossTradeAmt;
 
-    @ApiModelProperty(value = "回购利息|Object", required = false)
-    private Object AccruedInterestAmt;
+    @ApiModelProperty(value = "回购利息|BigDecimal", required = false)
+    private BigDecimal AccruedInterestAmt;
 
-    @ApiModelProperty(value = "到期结算金额|Object", required = false)
-    private Object SettlCurrAmt;
+    @ApiModelProperty(value = "到期结算金额|BigDecimal", required = false)
+    private BigDecimal SettlCurrAmt;
 
-    @ApiModelProperty(value = "本期回购结算利息|Object", required = false)
-    private Object OrderQty2;
+    @ApiModelProperty(value = "本期回购结算利息|BigDecimal", required = false)
+    private BigDecimal OrderQty2;
 
     @ApiModelProperty(value = "到期续做类型
 N = 非第三方续做
@@ -166,52 +166,42 @@ Y = 第三方续做|String", required = false)
     @ApiModelProperty(value = "取12，表示当前PartyID的取值为发起方的交易参与人代码|Integer", required = true)
     private Integer PartyRole;
 
-    @ApiModelProperty(value = "发起方交易员一债通账户|String", required = true)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取101，表示当前PartyID的取值为发起方的交易员一债通账户|Integer", required = true)
-    private Integer PartyRole;
-
-    @ApiModelProperty(value = "发起方业务交易单元代码|String", required = true)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取1，表示当前PartyID的取值为发起方业务交易单元号。|Integer", required = true)
-    private Integer PartyRole;
-
-    @ApiModelProperty(value = "发起方营业部代码|String", required = true)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取4001，表示当前PartyID的取值为发起方的营业部代码。|Integer", required = true)
-    private Integer PartyRole;
-
-    @ApiModelProperty(value = "发起方投资者帐户，TradeReportType为0或2时必填。|String", required = false)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取5，表示当前PartyID的取值为发起方投资者帐户|Integer", required = false)
-    private Integer PartyRole;
-
-    @ApiModelProperty(value = "仅对协议回购有效，协商成交、到期续做申报发起时为发起方投资者账户名称，确认时（TradeReportType=2）填写逆回购方证券账户名称。其他申报无意义。|String", required = false)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取38，表示当前PartyID的取值为发起方投资者账户名称|Integer", required = false)
-    private Integer PartyRole;
-
-    @ApiModelProperty(value = "对手方交易员一债通账户1，当合并申报时表示买方交易员代码|String", required = true)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取102，表示当前PartyID的取值为对手方的交易员一债通账户|Integer", required = true)
-    private Integer PartyRole;
-
-    @ApiModelProperty(value = "对手方交易员一债通账户2，仅合并申报时有效表示卖方交易员。其他申报无意义。|String", required = false)
-    private String PartyID;
-
-    @ApiModelProperty(value = "取57，表示当前的PartyID的取值为合并申报卖方|Integer", required = false)
-    private Integer PartyRole;
-
     @ApiModelProperty(value = "约定号，TradeReportType=0时可以填写，用于对手方定位订单信息。仅可填大小写英文字母或数字。|String", required = false)
     private String ConfirmID;
 
     @ApiModelProperty(value = "备注，可填写补充约定或补充条款|String", required = false)
     private String Memo;
+
+    @ApiModelProperty(value = "平台内分区号|Integer", required = true)
+    private Integer PartitionNo;
+
+    @ApiModelProperty(value = "执行报告编号，从1开始连续递增编号|Long", required = true)
+    private Long ReportIndex;
+
+    @ApiModelProperty(value = "交易所订单编号|String", required = true)
+    private String TradeID;
+
+    @ApiModelProperty(value = "被撤消订单的交易所订单编号，撤销申报必填|String", required = false)
+    private String OrigTradeID;
+
+    @ApiModelProperty(value = "执行报告类型，取值有：
+F=Trade，成交|String", required = true)
+    private String TrdAckStatus;
+
+    @ApiModelProperty(value = "当前申报的状态，取值有：
+2=Matched，已成交|String", required = true)
+    private String TrdRptStatus;
+
+    @ApiModelProperty(value = "成交价格|BigDecimal", required = true)
+    private BigDecimal LastPx;
+
+    @ApiModelProperty(value = "成交编号|String", required = true)
+    private String ExecID;
+
+    @ApiModelProperty(value = "成交数量|BigDecimal", required = true)
+    private BigDecimal LastQty;
+
+    @ApiModelProperty(value = "订单申报时间|String", required = false)
+    private String OrderEntryTime;
 
 }

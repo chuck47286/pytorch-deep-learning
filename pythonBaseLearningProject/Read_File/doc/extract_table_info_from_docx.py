@@ -23,6 +23,81 @@ def print_document_headings(doc_path):
             print(paragraph.text)
 
 
+def count_digits_no_str(n):
+    """
+    标签tag整数的字节计算
+    :param n:
+    :return:
+    """
+    if n == 0:
+        return 1
+    count = 0
+    while n:
+        n //= 10
+        count += 1
+    return count
+
+
+def calculate_value(input_str):
+    """
+    表格中类型列做字节计算
+    :param input_str:
+    :return:
+    """
+    # 枚举类型
+    if input_str.lower() in ['price', 'quantity', 'amount', 'date', 'ntime', 'boolean']:
+        # 假设每个枚举类型都有一个固定的返回值
+        enum_values = {'price': 15, 'quantity': 17, 'amount': 20, 'date': 8, 'ntime': 13, 'boolean': 1}
+        return enum_values[input_str.lower()]
+
+    # NX 类型
+    match = re.match(r'N(\d+)', input_str)
+    if match:
+        return int(match.group(1)) + 1
+
+    # CX 类型
+    match = re.match(r'C(\d+)', input_str)
+    if match:
+        return int(match.group(1))
+
+    # NX(Y) 类型
+    match = re.match(r'N(\d+)\((\d+)\)', input_str)
+    if match:
+        base = int(match.group(1))
+        increment = int(match.group(2))
+        return base + increment
+
+    # 如果不是上述任何类型，返回 None 或抛出异常
+    return 0
+    # raise ValueError(f"Unknown input format: {input_str}")
+
+
+def calc_row_data_memory(row_data):
+    """
+    计算每一行中的所需的数据量
+    :param row_data: 表中当行数据
+    :return:
+    """
+    # 0.非空判断
+    if len(row_data) < 5:
+        return 0
+    # 1. 数据处理
+    step_memo_data = None
+    if len(row_data) == 6 and row_data[1][1:-1].isdigit():
+        row_data[1]
+        step_memo_data = [int(row_data[1][1:-1]), row_data[-1][1:-1]]
+
+    if len(row_data) == 5 and row_data[0][1:-1].isdigit():
+        step_memo_data = [int(row_data[0][1:-1]), row_data[-1][1:-1]]
+    if step_memo_data is None:
+        return 0
+
+    # 2. 计算数据
+    total_cnt = count_digits_no_str(step_memo_data[0]) + 1 + calculate_value(
+        step_memo_data[1]) + 1  # = 等号需要一个byte <SOH> 尾缀需要一个byte
+    return total_cnt
+
+
 def print_all_tables(doc_path):
     """
     打印Word文档中所有表格的内容。
@@ -36,9 +111,9 @@ def print_all_tables(doc_path):
     for table_index, table in enumerate(doc.tables, start=1):
         # 过滤表格，方式1（直接指定表格下标过滤）
         # 如果表格索引不在指定范围内，则跳过该表格(设置开关,原则：前开后闭)
-        # start_table_index, end_table_index = 35, 44
-        # if table_index < start_table_index or table_index >= end_table_index:
-        #     continue
+        start_table_index, end_table_index = 35, 41
+        if table_index < start_table_index or table_index >= end_table_index:
+            continue
 
         # 过滤表格，方式2 （通过table表格头的样式内容校验）
         if len(table.rows) > 0:
@@ -59,6 +134,7 @@ def print_all_tables(doc_path):
                 continue
 
         print(f"Table {table_index}:")
+        table_memory_cnt = 0
         # 遍历表格中的每一行
         for row in table.rows:
             row_data = []
@@ -68,7 +144,7 @@ def print_all_tables(doc_path):
             for cell in row.cells:
                 # row_data.append(cell.text.strip()) # 之前逻辑，没有单元格内容校验
 
-                cell_text = cell.text.strip()
+                cell_text = repr(cell.text.strip())
                 # 检查当前单元格内容是否与前一个单元格的内容一致
                 if cell_text != previous_cell_text:
                     row_data.append(cell_text)
@@ -78,7 +154,9 @@ def print_all_tables(doc_path):
 
             # 将单元格文本连接成一行，并打印
             print(" | ".join(row_data))
+            table_memory_cnt += calc_row_data_memory(row_data)  # 计算每行中合理的数据的所可能占用的数据容量
 
+        print(f"{table_memory_cnt}")
         # 在表格之间添加空行以提高可读性
         print("\n" + "-" * 50 + "\n")
 
@@ -127,6 +205,12 @@ def remove_consecutive_duplicates(items):
 #             row_data[0], row_data[1] = row_data[1], row_data[0]
 #
 #     return row_data
+def buildListContainsFiveElementAndStartsWithNumber(original_list):
+    # 找到第一个纯数字的元素的索引
+    start_index = next(i for i, item in enumerate(original_list) if item.isdigit())
+
+    # 获取从纯数字元素开始的5个元素
+    return original_list[start_index:start_index + 5]
 
 
 def clean_row_data(row_data):
@@ -144,9 +228,8 @@ def clean_row_data(row_data):
         print(f"row_data < 5，可以直接删除.({original_row_data})")
         return []
     # 2.如果row_data数据大于5，需要删除头部非数字数据
-    tag_pattern = re.compile(r'^\d+$')
-    if len(row_data) > 5 and not tag_pattern.match(row_data[0]):
-        row_data = row_data[1:]
+    if len(row_data) > 5:  # 字段长度大于5，且第一位不是数字tag类型的，需要截取
+        row_data = buildListContainsFiveElementAndStartsWithNumber(row_data)
 
     if len(row_data) != 5:
         print(f"row_data > 5，需要删除头部非数字数据后，数据不满足长度要求，所以要删除.({original_row_data})")
@@ -271,19 +354,47 @@ def check_structured_data_and_find_differences(structured_data):
         f"\n-------------")
 
 
+def merge_messages(messages):
+    """
+    对于相同的消息类型 合并
+    合并的方式为:对于tag相同的值，只保留第一个
+    :param messages:
+    :return:
+    """
+    result_merged_messages = {}
+    for message in messages:
+        for key, value_list in message.items():
+            if key not in result_merged_messages:
+                result_merged_messages[key] = []
+            existing_tags = {item_key: True for item in result_merged_messages[key] for item_key in item.keys()}
+            for value in value_list:
+                tag = list(value.keys())[0]
+                if tag not in existing_tags:
+                    result_merged_messages[key].append(value)
+                    existing_tags[tag] = True
+    return result_merged_messages
+
+
+def mergeMessageIsSameFromFile(file_path):
+    data = tables_to_structured_data_simplified(file_path)  # 打印所有的格式化后的表格内容
+    for table in data:
+        print(table)
+    print(len(data))
+
+    # merged_messages = merge_messages(data) # 按照MsgTpe消息格式，合并后的消息
+    # for key in merged_messages:
+    #     print(f"{key}: {merged_messages[key]}")
+    # print(len(merged_messages))
+
+
 if __name__ == "__main__":
     # 读取文件路径
     dir_path = r'../external_library/doc_folder/'  # 测试文件路径
-    file_name = "20240314.docx"  # 测试文件名
+    file_name = "20240715.docx"  # 测试文件名
 
     file_path = os.path.join(dir_path, file_name)
     # print_document_headings(file_path)
 
     print_all_tables(file_path)  # 打印所有的表格内容
 
-    # data = tables_to_structured_data_simplified(file_path)  # 打印所有的格式化后的表格内容
-    # for table in data:
-    #     print(table)
-    # print(len(data))
-    # print("--------------")
-    # check_structured_data_and_find_differences(data)
+    # mergeMessageIsSameFromFile(file_path) # 打印word中 msgType类型相同的消息中的tag字段

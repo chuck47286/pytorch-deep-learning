@@ -1,4 +1,15 @@
+# 定义消息类型到Java类名和StepMsgEnum值的映射
+message_type_mapping = {
+    'AE': {'class_name': 'StepTradeCaptureReport', 'enum': 'TRADE_CAPTURE_REPORT'},
+    # 添加更多的映射关系
+}
+
 def get_java_type(type_identifier):
+    """
+    根据JAVA
+    :param type_identifier:
+    :return:
+    """
     # 检查首字母
     if type_identifier.startswith('C'):
         return 'String'
@@ -15,11 +26,26 @@ def get_java_type(type_identifier):
         # 如果有小数部分，使用BigDecimal
         if '(' in type_identifier:
             return 'BigDecimal'
+    elif type_identifier == 'date' or type_identifier == 'ntime' or type_identifier == 'Boolean':
+        return 'String'
+    elif type_identifier == 'price' or type_identifier == 'quantity' or type_identifier == 'amount':
+        return 'BigDecimal'
     # 如果无法识别，返回Object作为默认类型
     return 'Object'
 
 
 def build_java_file(json_data):
+    # 根据json_data的键来确定类名和枚举值
+    message_type = list(json_data.keys())[0]  # 假设json_data只有一个主要的键
+    mapping = message_type_mapping.get(message_type, None)
+
+    if mapping is None:
+        raise ValueError(f"Unsupported message type: {message_type}")
+
+    class_name = mapping['class_name']
+    step_msg_enum = mapping['enum']
+
+
     # Initialize parts of the Java class
     package_declaration = "package com.sse.iitp.protocol.converter.bo;\n\n"
     imports = "import com.sse.iitp.protocol.converter.enums.impl.StepMsgEnum;\n" \
@@ -27,27 +53,20 @@ def build_java_file(json_data):
               "import lombok.Data;\n\n" \
               "import java.math.BigDecimal;\n" \
               "import java.util.List;\n\n"
-    class_declaration = "@Data\npublic class StepTradeCaptureReport extends StepOrderBase {\n\n" \
-                        "    public StepTradeCaptureReport() {\n" \
-                        "        super(StepMsgEnum.TRADE_CAPTURE_REPORT);\n" \
+    class_declaration = f"@Data\npublic class {class_name} extends StepOrderBase {{\n\n" \
+                        f"    public {class_name}() {{\n" \
+                        f"        super(StepMsgEnum.{step_msg_enum});\n" \
                         "    }\n\n"
     class_fields = ""
     field_template = "    @ApiModelProperty(value = \"{description}|{type}\", required = {is_required})\n" \
                      "    private {java_type} {field_name};\n\n"
-
-    # Mapping from JSON data type to Java data type
-    type_mapping = {
-        'C6': 'String',
-        'C10': 'String',
-        # Add more mappings as necessary...
-    }
 
     # Generate fields
     for item in json_data['AE']:
         for key, value in item.items():
             field_name, description, required, data_type = value
             is_required = "true" if required == 'Y' else "false"
-            java_type = get_java_type(data_type)  # Default to String if mapping not found
+            java_type = get_java_type(data_type)  # Default to Object if mapping not found
             class_fields += field_template.format(description=description, type=java_type, is_required=is_required,
                                                   java_type=java_type, field_name=field_name)
 
@@ -57,14 +76,12 @@ def build_java_file(json_data):
 
 
 if __name__ == "__main__":
-    json_data = {'AE': [{'1180': ['ApplID', '业务类型，见附表', 'Y', 'C6']},
-                        {'571': ['TradeReportID', '会员内部编号', 'Y', 'C10']},
-                        {'828': ['TrdType', '业务子类型，见附表', 'N', 'C3']},
-                        {'856': ['TradeReportType', '成交申报类型\n0=Submit，提交成交申报\n2=Accept，确认成交申报\n3=Decline，拒绝成交申报', 'Y',
-                                 'C1']},
-                        {'487': ['TradeReportTransType', '成交申报事务类别\n0=New，新申报\n1=Cancel，撤销申报\n2=Replace，响应', 'Y',
-                                 'C1']},
-                        {'522': ['OwnerType', '订单所有者类型\n1=个人投资者\n103=机构投资者\n104=自营交易', 'Y', 'N3']},
+    json_data = {'AE': [{'1180': ['ApplID', '业务类型，见附表', 'Y', 'C6']}, {'571': ['TradeReportID', '会员内部编号', 'Y', 'C10']},
+                        {'828': ['TrdType', '业务子类型，见附表', 'N', 'C3']}, {
+                            '856': ['TradeReportType', '成交申报类型\n0=Submit，提交成交申报\n2=Accept，确认成交申报\n3=Decline，拒绝成交申报',
+                                    'Y', 'C1']}, {
+                            '487': ['TradeReportTransType', '成交申报事务类别\n0=New，新申报\n1=Cancel，撤销申报\n2=Replace，响应', 'Y',
+                                    'C1']}, {'522': ['OwnerType', '订单所有者类型\n1=个人投资者\n103=机构投资者\n104=自营交易', 'Y', 'N3']},
                         {'572': ['TradeReportRefID', '原始交易会员内部编号，表示被撤消订单的会员内部编号', 'N', 'C10']},
                         {'54': ['Side', '买卖方向：1=买，2=卖\n对于回购：1=正回购，2=逆回购\n对于合并申报且TradeReportType为0时：填0', 'Y', 'C1']},
                         {'44': ['Price1', '申报价格（元）或回购利率（%）\n合并申报时代表买入价格', 'N', 'price']},
@@ -77,11 +94,11 @@ if __name__ == "__main__":
                         {'8504': ['TotalValueTraded', '总成交金额，四舍五入\n预留，暂不启用', 'N', 'amount']},
                         {'540': ['TotalAccruedInterestAmt', '总回购利息，四舍五入\n预留，暂不启用', 'N', 'amount']},
                         {'10330': ['TotalSettlCurrAmt', '总到期结算金额，四舍五入\n预留，暂不启用', 'N', 'amount']},
-                        {'580': ['NoDates', '违约宽限期（天），[0,365]。', 'N', 'N3']},
-                        {'529': ['', '订单限制\n对于协议回购表示“是否同意在违约情形下由质权方对该违约交易项下的质押券直接以拍卖、变卖等方式进行处置”。\nY = 是\nN = 否', 'N',
-                                 'C1']},
-                        {'207': ['SecurityExchange', '结算场所：1=中国结算，2=中央结算\n双边托管券，可填1或2，单边托管券只能填其实际托管方。预留，暂不启用。', 'N',
-                                 'C1']},
+                        {'580': ['NoDates', '违约宽限期（天），[0,365]。', 'N', 'N3']}, {
+                            '529': ['', '订单限制\n对于协议回购表示“是否同意在违约情形下由质权方对该违约交易项下的质押券直接以拍卖、变卖等方式进行处置”。\nY = 是\nN = 否', 'N',
+                                    'C1']}, {
+                            '207': ['SecurityExchange', '结算场所：1=中国结算，2=中央结算\n双边托管券，可填1或2，单边托管券只能填其实际托管方。预留，暂不启用。', 'N',
+                                    'C1']},
                         {'10216': ['SettlPeriod', '结算周期：\n0 = T+0\n1 = T+1\n2 = T+2\n3 = T+3\n预留，暂不启用', 'N', 'C1']},
                         {'63': ['SettlType', '结算方式：1=净额结算，2=RTGS结算。\n担保券可填1或2；非担保券只能为2。', 'N', 'C1']},
                         {'711': ['NoUnderlyings', '证券个数', 'N', 'N2']}, {'48': ['SecurityID', '证券代码', 'N', 'C12']},
@@ -94,32 +111,25 @@ if __name__ == "__main__":
                         {'159': ['AccruedInterestAmt', '回购利息', 'N', 'amount']},
                         {'119': ['SettlCurrAmt', '到期结算金额', 'N', 'amount']},
                         {'192': ['OrderQty2', '本期回购结算利息', 'N', 'amount']},
-                        {'829': ['TrdSubType', '到期续做类型\nN = 非第三方续做\nY = 第三方续做', 'N', 'C1']},
-                        {'19': ['ExecRefID', '当TradeReportType为0时，原成交编号；\n当TradeReportType为2或3时，表示待确认（拒绝）的申报的交易所订单编号。',
-                                'N', 'C16']},
-                        {'453': ['NoPartyIDs',
-                                 '发起方重复组，依次包含发起方的交易参与人代码、发起方交易员一债通账户、发起方业务单元、发起方营业务代码、投资者账户、账户名称、对手方交易员一债通账户1、对手方交易员一债通账户2。取值为8',
-                                 'Y', 'N2']},
-                        {'448': ['PartyID', '发起方交易参与人机构代码', 'Y', 'C12']},
+                        {'829': ['TrdSubType', '到期续做类型\nN = 非第三方续做\nY = 第三方续做', 'N', 'C1']}, {'19': ['ExecRefID',
+                                                                                                     '当TradeReportType为0时，原成交编号；\n当TradeReportType为2或3时，表示待确认（拒绝）的申报的交易所订单编号。',
+                                                                                                     'N', 'C16']}, {
+                            '453': ['NoPartyIDs',
+                                    '发起方重复组，依次包含发起方的交易参与人代码、发起方交易员一债通账户、发起方业务单元、发起方营业务代码、投资者账户、账户名称、对手方交易员一债通账户1、对手方交易员一债通账户2。取值为8',
+                                    'Y', 'N2']}, {'448': ['PartyID', '发起方交易参与人机构代码', 'Y', 'C12']},
                         {'452': ['PartyRole', '取12，表示当前PartyID的取值为发起方的交易参与人代码', 'Y', 'N4']},
-                        {'448': ['PartyID', '发起方交易员一债通账户', 'Y', 'C10']},
-                        {'452': ['PartyRole', '取101，表示当前PartyID的取值为发起方的交易员一债通账户', 'Y', 'N4']},
-                        {'448': ['PartyID', '发起方业务交易单元代码', 'Y', 'C8']},
-                        {'452': ['PartyRole', '取1，表示当前PartyID的取值为发起方业务交易单元号。', 'Y', 'N4']},
-                        {'448': ['PartyID', '发起方营业部代码', 'Y', 'C8']},
-                        {'452': ['PartyRole', '取4001，表示当前PartyID的取值为发起方的营业部代码。', 'Y', 'N4']},
-                        {'448': ['PartyID', '发起方投资者帐户，TradeReportType为0或2时必填。', 'N', 'C13']},
-                        {'452': ['PartyRole', '取5，表示当前PartyID的取值为发起方投资者帐户', 'N', 'N4']},
-                        {'448': ['PartyID',
-                                 '仅对协议回购有效，协商成交、到期续做申报发起时为发起方投资者账户名称，确认时（TradeReportType=2）填写逆回购方证券账户名称。其他申报无意义。', 'N',
-                                 'C120']},
-                        {'452': ['PartyRole', '取38，表示当前PartyID的取值为发起方投资者账户名称', 'N', 'N4']},
-                        {'448': ['PartyID', '对手方交易员一债通账户1，当合并申报时表示买方交易员代码', 'Y', 'C10']},
-                        {'452': ['PartyRole', '取102，表示当前PartyID的取值为对手方的交易员一债通账户', 'Y', 'N4']},
-                        {'448': ['PartyID', '对手方交易员一债通账户2，仅合并申报时有效表示卖方交易员。其他申报无意义。', 'N', 'C10']},
-                        {'452': ['PartyRole', '取57，表示当前的PartyID的取值为合并申报卖方', 'N', 'N4']},
                         {'664': ['ConfirmID', '约定号，TradeReportType=0时可以填写，用于对手方定位订单信息。仅可填大小写英文字母或数字。', 'N', 'C12']},
-                        {'10198': ['Memo', '备注，可填写补充约定或补充条款', 'N', 'C900']}]}
+                        {'10198': ['Memo', '备注，可填写补充约定或补充条款', 'N', 'C900']},
+                        {'10197': ['PartitionNo', '平台内分区号', 'Y', 'N4']},
+                        {'10179': ['ReportIndex', '执行报告编号，从1开始连续递增编号', 'Y', 'N16']},
+                        {'1003': ['TradeID', '交易所订单编号', 'Y', 'C16']},
+                        {'1126': ['OrigTradeID', '被撤消订单的交易所订单编号，撤销申报必填', 'N', 'C16']},
+                        {'8912': ['TrdAckStatus', '执行报告类型，取值有：\nF=Trade，成交', 'Y', 'C1']},
+                        {'939': ['TrdRptStatus', '当前申报的状态，取值有：\n2=Matched，已成交', 'Y', 'C1']},
+                        {'31': ['LastPx', '成交价格', 'Y', 'price']}, {'17': ['ExecID', '成交编号', 'Y', 'C16']},
+                        {'32': ['LastQty', '成交数量', 'Y', 'quantity']},
+                        {'8500': ['OrderEntryTime', '订单申报时间', 'N', 'ntime']}]
+                 }
     java_code = build_java_file(json_data)
     # 将生成的Java代码写入到一个文本文件中
     file_path = './StepTestAE.java'
